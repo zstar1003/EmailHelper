@@ -144,6 +144,10 @@ class QQEmailFetcher:
 
         try:
             self.imap.select('INBOX')
+
+            # 获取本地时区的今天日期
+            import time
+            local_timezone = time.timezone
             today = datetime.now()
             today_date = today.date()
             today_str = today.strftime('%d-%b-%Y')
@@ -171,22 +175,43 @@ class QQEmailFetcher:
                 date_str = msg.get('Date', '')
                 email_date = self.parse_email_date(date_str)
 
-                if email_date and email_date.date() == today_date:
-                    matched_count += 1
-                    email_info = {
-                        'id': email_id.decode(),
-                        'subject': self.decode_str(msg.get('Subject', '')),
-                        'from': self.decode_str(msg.get('From', '')),
-                        'to': self.decode_str(msg.get('To', '')),
-                        'date': date_str,
-                        'parsed_date': email_date.strftime('%Y-%m-%d %H:%M:%S'),
-                        'body': self.get_email_body(msg)
-                    }
-                    emails.append(email_info)
+                # 调试输出
+                subject = self.decode_str(msg.get('Subject', ''))
+                print(f"  调试: 邮件「{subject[:30]}」")
+                print(f"    原始日期: {date_str}")
+
+                if email_date:
+                    # 转换为本地时区的日期（用于比较）
+                    # email_date是带时区的datetime，astimezone()会转换为本地时区
+                    local_email_date = email_date.astimezone()
+                    local_date = local_email_date.date()
+
+                    print(f"    UTC日期: {email_date.date()}")
+                    print(f"    本地日期: {local_date}")
+                    print(f"    目标日期: {today_date}")
+                    print(f"    匹配: {local_date == today_date}")
+
+                    # 使用本地时区的日期进行比较
+                    if local_date == today_date:
+                        matched_count += 1
+                        email_info = {
+                            'id': email_id.decode(),
+                            'subject': self.decode_str(msg.get('Subject', '')),
+                            'from': self.decode_str(msg.get('From', '')),
+                            'to': self.decode_str(msg.get('To', '')),
+                            'date': date_str,
+                            'parsed_date': local_email_date.strftime('%Y-%m-%d %H:%M:%S'),
+                            'body': self.get_email_body(msg)
+                        }
+                        emails.append(email_info)
+                else:
+                    print(f"    解析失败")
 
             print(f"✓ 找到 {matched_count} 封今天的邮件")
             return emails
 
         except Exception as e:
             print(f"✗ 获取邮件时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
