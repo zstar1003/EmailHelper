@@ -49,6 +49,9 @@ class QQEmailFetcher:
             return ""
         value, charset = decode_header(s)[0]
         if charset:
+            # 统一将 utf/UTF 转换为 utf-8
+            if charset.lower() == 'utf':
+                charset = 'utf-8'
             try:
                 value = value.decode(charset)
             except Exception:
@@ -172,7 +175,8 @@ class QQEmailFetcher:
                     continue
 
                 msg = email.message_from_bytes(msg_data[0][1])
-                date_str = msg.get('Date', '')
+                # 解码日期头部，防止出现 encoded string
+                date_str = self.decode_str(msg.get('Date', ''))
                 email_date = self.parse_email_date(date_str)
 
                 # 调试输出
