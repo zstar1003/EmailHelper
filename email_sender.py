@@ -9,7 +9,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
-from datetime import datetime
+from email.utils import formatdate
 
 
 class QQEmailSender:
@@ -55,7 +55,7 @@ class QQEmailSender:
             msg['From'] = self.email_account
             msg['To'] = to_email
             msg['Subject'] = Header(subject, 'utf-8')
-            msg['Date'] = datetime.now().strftime('%a, %d %b %Y %H:%M:%S %z')
+            msg['Date'] = formatdate(localtime=True)
             msg.attach(MIMEText(content, content_type, 'utf-8'))
 
             print(f"正在发送邮件到 {to_email}...")
