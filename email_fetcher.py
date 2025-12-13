@@ -8,7 +8,7 @@ QQ邮箱IMAP客户端
 import imaplib
 import email
 from email.header import decode_header
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class QQEmailFetcher:
@@ -185,13 +185,13 @@ class QQEmailFetcher:
                 print(f"    原始日期: {date_str}")
 
                 if email_date:
-                    # 转换为本地时区的日期（用于比较）
-                    # email_date是带时区的datetime，astimezone()会转换为本地时区
-                    local_email_date = email_date.astimezone()
+                    # 明确转换为 UTC+8 时区（中国标准时间）
+                    utc_plus_8 = timezone(timedelta(hours=8))
+                    local_email_date = email_date.astimezone(utc_plus_8)
                     local_date = local_email_date.date()
 
                     print(f"    UTC日期: {email_date.date()}")
-                    print(f"    本地日期: {local_date}")
+                    print(f"    本地日期 (UTC+8): {local_date}")
                     print(f"    目标日期: {today_date}")
                     print(f"    匹配: {local_date == today_date}")
 
